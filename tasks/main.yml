@@ -13,12 +13,19 @@
     owner: {{ playframework_application_user }}
     mode: 0644
 
-- name: Download SpringBoot application from repository
+- name: Download Play application from repository
   get_url:
     url: {{ playframework_application_download_source }}/
     dest: {{ playframework_application_app_location }}/{{ playframework_application_name }}.{{ playframework_application_artifact_type }}
     owner: {{ playframework_application_user }}
-    mode: 0744
+    mode: 0644
+
+- name: Unpack Play application from archive
+  archive:
+    src: {{ playframework_application_app_location }}/{{ playframework_application_name }}.{{ playframework_application_artifact_type }}
+    dest: {{ playframework_application_app_location }}
+    owner: {{ playframework_application_user }}
+    mode: 0755
     force: yes
 
 - name: Apply template config to target config location
