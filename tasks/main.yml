@@ -1,0 +1,48 @@
+---
+
+- name: Create application user
+  user:
+    name: {{ playframework_application_user }}
+    createhome: no
+    shell: /sbin/nologin
+
+- name: Create target Play application path
+  file:
+    path: {{ playframework_application_install_base }}/{{ playframework_application_name }}
+    state: directory
+    owner: {{ playframework_application_user }}
+    mode: 0644
+
+- name: Download SpringBoot application from repository
+  get_url:
+    url: {{ playframework_application_download_source }}/
+    dest: {{ playframework_application_app_location }}/{{ playframework_application_name }}.{{ playframework_application_artifact_type }}
+    owner: {{ playframework_application_user }}
+    mode: 0744
+    force: yes
+
+- name: Apply template config to target config location
+  template:
+    src: templates/playframeworkboot_config.j2
+    dest: {{ playframework_application_conf_location }}/{{ playframework_application_name }}.conf
+    owner: {{ playframework_application_user }}
+    mode: 0600
+
+- name: Create init.d link for application start-up (sysv OSes)
+  template:
+    dest: /etc/init.d/{{ playframework_application_name }}
+    src: templates/playframework_app_init.j2
+    mode: 0644
+  when: (ansible_distribution == "RedHat" and ansible_distribution_major_version == "6")
+
+- name: Create service file for application control (systemd OSes)
+  template:
+    dest: /etc/systemd/system/{{ playframework_application_name }}.service
+    src: templates/playframeworkboot_systemd_unit.j2
+  when: (ansible_distribution == "RedHat" and ansible_distribution_major_version == "7")
+
+- name: Enable service for SpringBoot application
+  service:
+    name: {{ playframework_application_name }}
+    state: started
+    enabled: yes

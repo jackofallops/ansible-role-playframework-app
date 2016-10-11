@@ -1,0 +1,19 @@
+---
+playframework_application_name: ""
+playframework_application_user: root
+playframework_application_artifact_type: jar
+playframework_application_repository: Releases
+playframework_application_repository_path: /{{ playframework_application_name }}/{{ playframework_application_version }}/{{ playframework_application_name }}-{{ playframework_application_version }}.{{ playframework_application_artifact_type }}
+playframework_application_port: 8080
+playframework_application_version_string: v0.0.1
+playframework_application_download_source: http://{{ artifactory_host }}/{{ playframework_application_repository }}/{{ playframework_application_repository_path }}
+playframework_application_install_base: /app
+playframework_application_config_base: /conf
+playframework_application_log_file: {{ playframework_application_install_base }}/{{ playframework_application_name }}/{{ playframework_application_name }}.log
+playframework_application_crypto_secret: PleaseChangeMe
+playframework_application_config_template: springboot_config.j2
+playframework_application_start_cmd: {{ playframework_application_install_base }}/{{ playframework_application_name }}/bin/{{ playframework_application_name }}
+playframework_application_java_opts: "-Dconfig.file={{ playframework_application_config_base }}/{{ playframework_application_name }} -Dhttp.port={{ playframework_application_port }} -Dplay.evolutions.db.default.autoApply=true -Dplay.crypto.secret=\"{{ playframework_application_crypto_secret }}\" -Dpidfile.path={{ playframework_application_pid_file }} > {{ playframework_application_log_file }}"
+playframework_application_java_opts: ""
+playframework_application_start_cmd: ""
+playframework_application_pid_file: ""

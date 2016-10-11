@@ -1,0 +1,101 @@
+#!/usr/bin env
+
+### BEGIN INIT INFO
+# Provides: {{ playframework_application_name }}
+# Required-Start: $local_fs $remote_fs $network $time $named
+# Should-Start:
+# Required-Stop: $local_fs $remote_fs $network $time $named
+# Should-Stop:
+# Default-Start: 3 5
+# Default-Stop: 0 1 2 6
+# Short-Description: {{ playframework_application_name }}
+# Description: {{ playframework_application_name }}
+### END INIT INFO
+
+JAVA_HOME=/etc/alternatives/jre_1.8.0/
+JAVA_OPTS={{ playframework_application_java_opts }}
+JAVA_CMD=/usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java
+START_COMMAND={{ playframework_application_start_cmd }}
+PID_FILE={{ playframework_application_pid_file }}
+
+# colors
+red='\e[0;31m'
+green='\e[0;32m'
+yellow='\e[0;33m'
+reset='\e[0m'
+
+echoRed() { echo -e "${red}$1${reset}"; }
+echoGreen() { echo -e "${green}$1${reset}"; }
+echoYellow() { echo -e "${yellow}$1${reset}"; }
+
+. /etc/init.d/functions
+
+case "$1" in
+start)
+    if [ -f $PID_FILE ]; then
+        PID=`cat $PID_FILE`
+        if [ -z "`ps axf | grep -w ${PID} | grep -v grep`" ]; then
+            daemon --user {{ playframework_application_user }} --pidfile $PID_FILE $START_COMMAND $JAVA_OPTS > /dev/null
+        else
+            echoYellow "Already running [$PID]"
+            exit 0
+        fi
+    else
+        daemon --user {{ playframework_application_user }} --pidfile $PID_FILE $JAVA_CMD $JAVA_OPTS > /dev/null
+    fi
+
+    PID=`cat $PID_FILE`
+
+    if [ -z $PID ]; then
+        echoRed "Failed starting"
+        exit 3
+    else
+        echoGreen "Started [$PID]"
+        exit 0
+    fi
+;;
+
+status)
+    if [ -f $PID_FILE ]; then
+        PID=`cat $PID_FILE`
+        if [ -z "`ps axf | grep -w ${PID} | grep -v grep`" ]; then
+            echoRed "Not running (process dead but pidfile exists)"
+            exit 1
+        else
+            echoGreen "Running with PID [$PID]"
+            exit 0
+        fi
+    else
+        echoRed "Not running"
+        exit 3
+    fi
+;;
+
+stop)
+    if [ -f $PID_FILE ]; then
+        PID=`cat $PID_FILE`
+        if [ -z "`ps axf | grep -w ${PID} | grep -v grep`" ]; then
+            echoRed "Not running (process dead but pidfile exists)"
+            exit 1
+        else
+            PID=`cat $PID_FILE`
+            killproc -p $PID
+            echoGreen "Stopped [$PID]"
+            rm -f $PID_FILE
+            exit 0
+        fi
+    else
+        echoRed "Not running (pid not found)"
+        exit 3
+    fi
+;;
+
+restart)
+    $0 stop
+    $0 start
+;;
+
+*)
+    echo "Usage: $0 {status|start|stop|restart}"
+    exit 1
+esac
